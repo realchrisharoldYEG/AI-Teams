@@ -16,5 +16,5 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AI_TEAMS_582DA }}
           channelId: live
-          projectId: ai-teams-8d3e4
+          projectId: ai-teams-582da
           entryPoint: './'
