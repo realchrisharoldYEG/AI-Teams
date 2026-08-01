@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monolith Console</title>
+</head>
+<body style="margin:0;padding:0;">
+<style>
+  :root {
+    --canvas: #0a0a0a;
+    --surface: #111111;
+    --surface-raised: #171717;
+    --text-primary: #ffffff;
+    --text-secondary: #a3a3a3;
+    --border: #333333;
+    --signal: #00e5ff;
+    --danger: #ff3b3b;
+    --warning: #ffb020;
+    --success: #4dff88;
+    --radius: 0px;
+    --shadow: none;
+    --font-interface: "Geist Mono", "JetBrains Mono", monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  .mc-root {
+    background: var(--canvas);
+    color: var(--text-primary);
+    font-family: var(--font-interface);
+    font-size: 13px;
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: 0;
+    letter-spacing: 0.01em;
+  }
+
+  .mc-root ::selection { background: var(--signal); color: #000; }
+
+  /* ---------- Top bar ---------- */
+  .mc-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px;
+    background: var(--surface);
+  }
+  .mc-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .mc-brand-mark {
+    width: 10px;
+    height: 10px;
+    background: var(--signal);
+  }
+  .mc-brand-name {
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-size: 12px;
+  }
+  .mc-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .mc-audit-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--signal);
+    color: var(--signal);
+    padding: 4px 10px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .mc-audit-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--signal);
+    animation: mc-pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes mc-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.25; }
+  }
+  .mc-commander {
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .mc-commander b { color: var(--text-primary); font-weight: 700; }
+
+  /* ---------- Nav ---------- */
+  .mc-nav {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--canvas);
+    overflow-x: auto;
+  }
+  .mc-nav-item {
+    padding: 11px 18px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-right: 1px solid var(--border);
+    white-space: nowrap;
+    transition: color 0.15s ease, background 0.15s ease;
+    user-select: none;
+  }
+  .mc-nav-item:hover { color: var(--text-primary); background: var(--surface); }
+  .mc-nav-item.active {
+    color: var(--canvas);
+    background: var(--signal);
+  }
+
+  /* ---------- TV Remote Focus Indicator ---------- */
+  .focusable {
+    outline: none;
+  }
+  .focusable:focus {
+    outline: 2px solid var(--signal);
+    background: var(--surface-raised) !important;
+  }
+
+  /* ---------- Layout ---------- */
+  .mc-body { padding: 20px; }
+  .mc-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .mc-panel-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-secondary);
+    margin: 0 0 12px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .mc-grid { display: grid; gap: 16px; }
+  .mc-grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .mc-grid-2 { grid-template-columns: 1.4fr 1fr; }
+
+  /* ---------- Dashboard ---------- */
+  .mc-mission-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 140px 110px 100px;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .mc-mission-row:last-child { border-bottom: none; }
+  .mc-mission-id { color: var(--text-secondary); font-size: 11px; }
+  .mc-mission-title { font-weight: 600; }
+  .mc-mission-title .mc-mission-phase {
+    display: block;
+    color: var(--text-secondary);
+    font-weight: 400;
+    font-size: 11px;
+    margin-top: 2px;
+  }
+  .mc-tag {
+    display: inline-block;
+    padding: 3px 8px;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: 1px solid var(--border);
+  }
+  .mc-tag.risk-low { color: var(--success); border-color: var(--success); }
+  .mc-tag.risk-medium { color: var(--warning); border-color: var(--warning); }
+  .mc-tag.risk-high { color: var(--danger); border-color: var(--danger); }
+  .mc-tag.gate-awaiting { color: var(--signal); border-color: var(--signal); }
+  .mc-tag.gate-locked { color: var(--text-secondary); }
+  .mc-enter-btn {
+    background: transparent;
+    border: 1px solid var(--text-primary);
+    color: var(--text-primary);
+    font-family: var(--font-interface);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+
+  .mc-stat { text-align: left; }
+  .mc-stat-value { font-size: 28px; font-weight: 700; line-height: 1; }
+  .mc-stat-label {
+    color: var(--text-secondary); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 6px;
+  }
+
+  /* ---------- Console & Output ---------- */
+  .mc-input-area {
+    width: 100%; background: var(--canvas); border: 1px solid var(--border); color: var(--text-primary);
+    font-family: var(--font-interface); font-size: 13px; padding: 12px; resize: none; min-height: 80px;
+  }
+  .mc-model-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .mc-model-chip {
+    border: 1px solid var(--border); color: var(--text-secondary); padding: 6px 12px; font-size: 11px; cursor: pointer;
+  }
+  .mc-model-chip.selected { border-color: var(--signal); color: var(--signal); }
+  .mc-dispatch-btn {
+    margin-top: 14px; background: var(--signal); color: #000; border: none; font-family: var(--font-interface);
+    font-weight: 700; text-transform: uppercase; padding: 10px 18px; cursor: pointer;
+  }
+  .mc-output { background: var(--canvas); border: 1px solid var(--border); padding: 14px; min-height: 160px; white-space: pre-wrap; }
+  .mc-cursor { display: inline-block; width: 7px; height: 13px; background: var(--signal); animation: mc-pulse 0.9s step-start infinite; }
+
+  /* ---------- Red Team & Audit ---------- */
+  .mc-verdict { display: inline-block; font-weight: 700; padding: 4px 10px; font-size: 11px; text-transform: uppercase; border: 1px solid; margin-bottom: 12px; }
+  .mc-verdict.REVISE { color: var(--warning); border-color: var(--warning); }
+  .mc-confidence-bar { height: 4px; background: var(--border); margin-top: 6px; }
+  .mc-confidence-fill { height: 100%; background: var(--signal); }
+  .mc-audit-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .mc-audit-table th { border-bottom: 1px solid var(--border); padding: 8px; text-align: left; color: var(--text-secondary); }
+  .mc-audit-table td { border-bottom: 1px solid var(--border); padding: 8px; }
+  .mc-actor-tag { border: 1px solid var(--border); font-size: 9px; padding: 2px 5px; }
+  .mc-actor-tag.HUMAN { color: var(--signal); border-color: var(--signal); }
+  .mc-actor-tag.AGENT { color: var(--text-primary); }
+
+  @media (max-width: 720px) {
+    .mc-grid-3, .mc-grid-2 { grid-template-columns: 1fr; }
+    .mc-mission-row { grid-template-columns: 1fr; row-gap: 6px; }
+  }
+</style>
+
+<div class="mc-root" id="mc-root">
+  <div class="mc-topbar">
+    <div class="mc-brand">
+      <div class="mc-brand-mark"></div>
+      <div><div class="mc-brand-name">Monolith Console</div></div>
+    </div>
+    <div class="mc-topbar-right">
+      <div class="mc-audit-badge"><span class="mc-audit-dot"></span> Audit Active</div>
+      <div class="mc-commander">Commander: <b>Chris</b></div>
+    </div>
+  </div>
+  <div class="mc-nav" id="mc-nav"></div>
+  <div class="mc-body" id="mc-body"></div>
+</div>
+
+<script>
+(function () {
+  const nav = document.getElementById('mc-nav');
+  const body = document.getElementById('mc-body');
+
+  const MISSIONS = [
+    { id: "0017", title: "Build launch architecture", phase: "High-Contrast Review", risk: "medium", gate: "awaiting" },
+    { id: "0016", title: "Draft partner onboarding flow", phase: "Drafting", risk: "low", gate: "locked" },
+    { id: "0015", title: "Define provider failover policy", phase: "Strategy", risk: "high", gate: "locked" },
+  ];
+
+  const CRITIC_REPORT = {
+    verdict: "REVISE",
+    primaryWeakness: { summary: "Provider failover has no defined authority.", severity: "HIGH" },
+    confidence: 0.72
+  };
+
+  const AUDIT_EVENTS = [
+    { id: "evt_0091", actorType: "HUMAN", actorSeat: "Chris", action: "REQUEST_REVISION", occurredAt: "14:35:02" },
+    { id: "evt_0090", actorType: "AGENT", actorSeat: "Critic", action: "SUBMIT_CRITIQUE", occurredAt: "14:35:00" },
+  ];
+
+  const SCREENS = [
+    { key: "dashboard", label: "Dashboard" },
+    { key: "console", label: "Commander Console" },
+    { key: "redteam", label: "Red Team Terminal" },
+    { key: "audit", label: "Audit Vault" },
+  ];
+
+  let active = "dashboard";
+  let outputText = "SYSTEM INITIALIZED. Standing by for instructions...\n";
+
+  function renderNav() {
+    nav.innerHTML = "";
+    SCREENS.forEach(s => {
+      const el = document.createElement("div");
+      el.className = "mc-nav-item focusable" + (active === s.key ? " active" : "");
+      el.tabIndex = 0;
+      el.textContent = s.label;
+      el.onclick = () => { active = s.key; renderNav(); renderBody(); };
+      nav.appendChild(el);
+    });
+  }
+
+  function renderDashboard() {
+    body.innerHTML = `
+      <div class="mc-grid mc-grid-3">
+        <div class="mc-panel"><div class="mc-stat"><div class="mc-stat-value">${MISSIONS.length}</div><div class="mc-stat-label">Missions</div></div></div>
+        <div class="mc-panel"><div class="mc-stat"><div class="mc-stat-value" style="color:var(--signal)">1</div><div class="mc-stat-label">Awaiting</div></div></div>
+        <div class="mc-panel"><div class="mc-stat"><div class="mc-stat-value" style="color:var(--danger)">1</div><div class="mc-stat-label">High Risk</div></div></div>
+      </div>
+      <div class="mc-panel">
+        <div class="mc-panel-title">Missions</div>
+        <div>
+          ${MISSIONS.map(m => `
+            <div class="mc-mission-row focusable" tabIndex="0" onclick="alert('Accessing Mission M-${m.id}')">
+              <div class="mc-mission-id">M-${m.id}</div>
+              <div class="mc-mission-title">${m.title}<span class="mc-mission-phase">${m.phase}</span></div>
+              <div><span class="mc-tag risk-${m.risk}">${m.risk} risk</span></div>
+              <div><span class="mc-tag gate-${m.gate}">${m.gate === 'awaiting' ? 'Awaiting' : 'Locked'}</span></div>
+              <div><button class="mc-enter-btn">Enter →</button></div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderConsole() {
+    body.innerHTML = `
+      <div class="mc-grid mc-grid-2">
+        <div class="mc-panel">
+          <div class="mc-panel-title">Dispatch Command</div>
+          <textarea class="mc-input-area focusable" tabIndex="0" id="promptInput" placeholder="Enter instructions for AI Teams..."></textarea>
+          <div class="mc-model-row">
+            <div class="mc-model-chip selected focusable" tabIndex="0">Gemini</div>
+            <div class="mc-model-chip focusable" tabIndex="0">Claude</div>
+          </div>
+          <button class="mc-dispatch-btn focusable" tabIndex="0" onclick="triggerDispatch()">Dispatch Mission</button>
+        </div>
+        <div class="mc-panel">
+          <div class="mc-panel-title">Console Output</div>
+          <div class="mc-output" id="consoleOutput">${outputText}<span class="mc-cursor"></span></div>
+        </div>
+      </div>
+    `;
+  }
+
+  window.triggerDispatch = function() {
+    const input = document.getElementById('promptInput');
+    if (!input || !input.value.trim()) return;
+    outputText += `\n> Dispatching: ${input.value}\n[Orchestrator] Task routed to AI Agents...\n`;
+    input.value = "";
+    renderConsole();
+  }
+
+  function renderRedTeam() {
+    body.innerHTML = `
+      <div class="mc-panel">
+        <div class="mc-panel-title">Critic Report</div>
+        <div class="mc-verdict ${CRITIC_REPORT.verdict}">${CRITIC_REPORT.verdict}</div>
+        <div><strong>Primary Weakness:</strong> ${CRITIC_REPORT.primaryWeakness.summary}</div>
+        <div style="margin-top:10px;"><strong>Severity:</strong> <span class="mc-tag risk-high">${CRITIC_REPORT.primaryWeakness.severity}</span></div>
+        <div style="margin-top:15px;">Critic Confidence Score:</div>
+        <div class="mc-confidence-bar"><div class="mc-confidence-fill" style="width:${CRITIC_REPORT.confidence*100}%"></div></div>
+      </div>
+    `;
+  }
+
+  function renderAudit() {
+    body.innerHTML = `
+      <div class="mc-panel">
+        <div class="mc-panel-title">Audit Log</div>
+        <table class="mc-audit-table">
+          <thead><tr><th>Time</th><th>Actor</th><th>Action</th></tr></thead>
+          <tbody>
+            ${AUDIT_EVENTS.map(e => `
+              <tr>
+                <td>${e.occurredAt}</td>
+                <td><span class="mc-actor-tag ${e.actorType}">${e.actorSeat}</span></td>
+                <td>${e.action}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function renderBody() {
+    if (active === "dashboard") renderDashboard();
+    else if (active === "console") renderConsole();
+    else if (active === "redteam") renderRedTeam();
+    else if (active === "audit") renderAudit();
+  }
+
+  // Spatial Navigation logic for TV Remote Controls
+  document.addEventListener('keydown', function(e) {
+    const focusable = Array.from(document.querySelectorAll('.focusable'));
+    let index = focusable.indexOf(document.activeElement);
+
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+      index = (index + 1) % focusable.length;
+      if(focusable[index]) focusable[index].focus();
+      e.preventDefault();
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      index = (index - 1 + focusable.length) % focusable.length;
+      if(focusable[index]) focusable[index].focus();
+      e.preventDefault();
+    } else if (e.key === 'Enter') {
+      if (document.activeElement) {
+        document.activeElement.click();
+      }
+    }
+  });
+
+  renderNav();
+  renderBody();
+})();
+</script>
+</body>
+</html>

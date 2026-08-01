@@ -1,0 +1,13 @@
+{
+    "id": "com.aiteams.monolith.console",
+    "version": "1.0.0",
+    "vendor": "AI Teams",
+    "type": "web",
+    "main": "index.html",
+    "title": "Monolith Console",
+    "icon": "icon.png",
+    "largeIcon": "largeIcon.png",
+    "bgImage": "backgroundImage.png",
+    "resolution": "1920x1080"
+  }
+  
