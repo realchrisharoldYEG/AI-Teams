@@ -13,9 +13,9 @@ jobs:
       - uses: actions/checkout@v4
       - run: n
       - uses: FirebaseExtended/action-hosting-deploy@v0
-with:
+        with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_AI_TEAMS_582DA }}
           channelId: live
-          projectId: ai-teams-8d3e4  # Corrected to your project ID
-          entryPoint: './'          # Tells the action to look in the root
+          projectId: ai-teams-8d3e4
+          entryPoint: './'
